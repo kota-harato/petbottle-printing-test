@@ -111,7 +111,7 @@ if uploaded_files and master_data:
             st.markdown('<div class="subheader">検出された文字とOCR結果:</div>', unsafe_allow_html=True)
 
             # 表形式で検出結果を表示
-            texts = extract_text_from_boxes(np.array(processed_image), boxes, recognition_model, data_transforms)
+            texts = extract_text_from_boxes(processed_image, boxes, recognition_model, data_transforms)
             combined_text = ''.join(texts)  # 予測結果を結合して1文にする
             results = []
             for i, (box, text) in enumerate(zip(boxes, texts)):
