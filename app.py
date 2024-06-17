@@ -1,9 +1,8 @@
 import streamlit as st
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw
 import base64
 from io import BytesIO
-import cv2
 from text_detection import detect_text, draw_boxes, extract_text_from_boxes, recognition_model, data_transforms
 
 # ページ設定を「wide」に設定
@@ -98,9 +97,9 @@ def get_image_base64(image_array):
 if uploaded_files and master_data:
     for uploaded_file in uploaded_files:
         st.markdown(f'<div class="subheader">処理中: {uploaded_file.name}</div>', unsafe_allow_html=True)
-        image = Image.open(uploaded_file)
-        image = np.array(image)
-        boxes, processed_image = detect_text(image)
+        image = Image.open(uploaded_file).convert("RGB")
+        image_np = np.array(image)
+        boxes, processed_image = detect_text(image_np)
         img_with_boxes = draw_boxes(processed_image, boxes)
 
         col1, col2 = st.columns(2)
@@ -112,15 +111,17 @@ if uploaded_files and master_data:
             st.markdown('<div class="subheader">検出された文字とOCR結果:</div>', unsafe_allow_html=True)
 
             # 表形式で検出結果を表示
-            texts = extract_text_from_boxes(processed_image, boxes, recognition_model, data_transforms)
+            texts = extract_text_from_boxes(np.array(processed_image), boxes, recognition_model, data_transforms)
             combined_text = ''.join(texts)  # 予測結果を結合して1文にする
             results = []
             for i, (box, text) in enumerate(zip(boxes, texts)):
                 x_min, y_min = box[0]
                 x_max, y_max = box[2]
-                char_image = processed_image[y_min:y_max, x_min:x_max]
-                char_image_resized = cv2.resize(char_image, (50, 50))  # リサイズ
-                char_image_base64 = get_image_base64(char_image_resized)
+                char_image = processed_image.crop((x_min, y_min, x_max, y_max))
+                char_image_resized = char_image.resize((50, 50))  # リサイズ
+                buffer = BytesIO()
+                char_image_resized.save(buffer, format="PNG")
+                char_image_base64 = base64.b64encode(buffer.getvalue()).decode()
                 results.append(f'<div class="character-box"><img src="data:image/png;base64,{char_image_base64}" class="character-image"><br>{text}</div>')
 
             # HTMLの生成
