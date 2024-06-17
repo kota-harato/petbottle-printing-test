@@ -12,7 +12,8 @@ st.set_page_config(layout="wide")
 # ユーザー認証
 def check_password():
     def password_entered():
-        if st.session_state["password"] == st.secrets["password"]:
+        # 文字列として比較することを明確にするために str() を使用
+        if str(st.session_state["password"]) == str(st.secrets["password"]):
             st.session_state["password_correct"] = True
             del st.session_state["password"]  # パスワードのセキュリティを確保
         else:
