@@ -60,7 +60,7 @@ data_transforms = transforms.Compose([
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
 ])
 
-def detect_text(image, text_threshold=0.7, box_expansion=20):
+def detect_text(image, net, text_threshold=0.7, box_expansion=20):
     orig_height, orig_width = image.shape[:2]
 
     # リサイズ

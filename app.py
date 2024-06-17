@@ -4,7 +4,7 @@ from PIL import Image
 import base64
 from io import BytesIO
 import cv2  # OpenCVを使用
-from text_detection import detect_text, draw_boxes, extract_text_from_boxes, recognition_model, data_transforms
+from text_detection import detect_text, draw_boxes, extract_text_from_boxes, recognition_model, data_transforms, net
 
 # ページ設定を「wide」に設定
 st.set_page_config(layout="wide")
@@ -100,7 +100,7 @@ if uploaded_files and master_data:
         st.markdown(f'<div class="subheader">処理中: {uploaded_file.name}</div>', unsafe_allow_html=True)
         image = Image.open(uploaded_file).convert("RGB")
         image_np = np.array(image)
-        boxes, processed_image = detect_text(image_np)
+        boxes, processed_image = detect_text(image_np, net)  # netを渡す
         img_with_boxes = draw_boxes(processed_image, boxes)
 
         col1, col2 = st.columns(2)
