@@ -3,9 +3,8 @@ import numpy as np
 from PIL import Image
 import base64
 from io import BytesIO
-import cv2
-from text_detection import detect_text, draw_boxes, extract_text_from_boxes, load_recognition_model, data_transforms
-from webcam_overlay import webcam_overlay
+import cv2  # OpenCVを使用
+from text_detection import detect_text, draw_boxes, extract_text_from_boxes, recognition_model, data_transforms
 
 # ページ設定を「wide」に設定
 st.set_page_config(layout="wide")
@@ -77,27 +76,6 @@ st.markdown(
     .character-image {
         height: 50px;
     }
-    #videoContainer {
-        position: relative;
-        width: 100%;
-        height: auto;
-    }
-    #videoElement {
-        width: 100%;
-        height: auto;
-    }
-    #overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-    }
-    #overlay canvas {
-        width: 100%;
-        height: auto;
-    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -105,22 +83,9 @@ st.markdown(
 
 st.markdown('<div class="title">文字検出とOCR</div>', unsafe_allow_html=True)
 
-# カメラ入力とガイドラインの表示
-st.markdown('<div class="subheader">カメラで写真を撮影してください:</div>', unsafe_allow_html=True)
-webcam_overlay()
-
-# 文字認識モデルのスタンバイ確認
-st.markdown('<div class="subheader">文字認識モデルのスタンバイ状態を確認中...</div>', unsafe_allow_html=True)
-try:
-    recognition_model = load_recognition_model()  # モデルをロード
-    st.markdown('<div class="highlight">文字認識モデルがスタンバイ状態です。</div>', unsafe_allow_html=True)
-except Exception as e:
-    st.markdown(f'<div class="ng">文字認識モデルの読み込み中にエラーが発生しました: {str(e)}</div>', unsafe_allow_html=True)
-
 # マスターデータの入力
 master_data = st.text_input("マスターデータを入力してください", "")
 
-# 画像ファイルのアップロード
 uploaded_files = st.file_uploader("画像を選択してください...", type=["jpg", "png"], accept_multiple_files=True)
 
 def get_image_base64(image_array):
@@ -130,15 +95,10 @@ def get_image_base64(image_array):
     encoded = base64.b64encode(buffer.getvalue()).decode()
     return encoded
 
-# 画像処理
-if uploaded_files:
-    image_list = []
+if uploaded_files and master_data:
     for uploaded_file in uploaded_files:
+        st.markdown(f'<div class="subheader">処理中: {uploaded_file.name}</div>', unsafe_allow_html=True)
         image = Image.open(uploaded_file).convert("RGB")
-        image_list.append(image)
-
-    for image in image_list:
-        st.markdown('<div class="subheader">処理中の画像:</div>', unsafe_allow_html=True)
         image_np = np.array(image)
         boxes, processed_image = detect_text(image_np)
         img_with_boxes = draw_boxes(processed_image, boxes)
