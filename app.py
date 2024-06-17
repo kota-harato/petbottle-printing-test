@@ -26,7 +26,7 @@ def check_password():
     if not st.session_state["password_correct"]:
         # ユーザーにパスワードを入力させる
         st.text_input("パスワードを入力してください", type="password", on_change=password_entered, key="password")
-        if st.session_state["password_correct"] is False:
+        if "password_correct" in st.session_state and not st.session_state["password_correct"]:
             st.error("パスワードが違います")
         return False
     else:
