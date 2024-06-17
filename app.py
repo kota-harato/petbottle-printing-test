@@ -4,7 +4,7 @@ from PIL import Image
 import base64
 from io import BytesIO
 import cv2
-from text_detection import detect_text, draw_boxes, extract_text_from_boxes, recognition_model, data_transforms
+from text_detection import detect_text, draw_boxes, extract_text_from_boxes, load_recognition_model, data_transforms
 from webcam_overlay import webcam_overlay
 
 # ページ設定を「wide」に設定
@@ -77,6 +77,27 @@ st.markdown(
     .character-image {
         height: 50px;
     }
+    #videoContainer {
+        position: relative;
+        width: 100%;
+        height: auto;
+    }
+    #videoElement {
+        width: 100%;
+        height: auto;
+    }
+    #overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+    }
+    #overlay canvas {
+        width: 100%;
+        height: auto;
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -87,6 +108,14 @@ st.markdown('<div class="title">文字検出とOCR</div>', unsafe_allow_html=Tru
 # カメラ入力とガイドラインの表示
 st.markdown('<div class="subheader">カメラで写真を撮影してください:</div>', unsafe_allow_html=True)
 webcam_overlay()
+
+# 文字認識モデルのスタンバイ確認
+st.markdown('<div class="subheader">文字認識モデルのスタンバイ状態を確認中...</div>', unsafe_allow_html=True)
+try:
+    recognition_model = load_recognition_model()  # モデルをロード
+    st.markdown('<div class="highlight">文字認識モデルがスタンバイ状態です。</div>', unsafe_allow_html=True)
+except Exception as e:
+    st.markdown(f'<div class="ng">文字認識モデルの読み込み中にエラーが発生しました: {str(e)}</div>', unsafe_allow_html=True)
 
 # マスターデータの入力
 master_data = st.text_input("マスターデータを入力してください", "")
