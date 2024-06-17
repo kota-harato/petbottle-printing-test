@@ -19,14 +19,18 @@ def check_password():
         else:
             st.session_state["password_correct"] = False
 
+    # パスワードが正しいかどうかのフラグをセッションステートで管理
     if "password_correct" not in st.session_state:
+        st.session_state["password_correct"] = False
+
+    if not st.session_state["password_correct"]:
         # ユーザーにパスワードを入力させる
         st.text_input("パスワードを入力してください", type="password", on_change=password_entered, key="password")
+        if st.session_state["password_correct"] is False:
+            st.error("パスワードが違います")
         return False
-    elif not st.session_state["password_correct"]:
-        st.error("パスワードが違います")
-        return False
-    return True
+    else:
+        return True
 
 # パスワードが正しい場合のみアプリを表示
 if check_password():
