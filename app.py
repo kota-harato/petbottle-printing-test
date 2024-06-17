@@ -77,6 +77,11 @@ st.markdown(
     .character-image {
         height: 50px;
     }
+    #videoContainer {
+        position: relative;
+        width: 100%;
+        height: auto;
+    }
     #videoElement {
         width: 100%;
         height: auto;
@@ -103,7 +108,7 @@ st.markdown('<div class="title">文字検出とOCR</div>', unsafe_allow_html=Tru
 # JavaScriptとHTMLの埋め込み
 components.html(
     """
-    <div style="position: relative;">
+    <div id="videoContainer">
         <video id="videoElement" autoplay></video>
         <div id="overlay">
             <canvas id="guideCanvas"></canvas>
@@ -122,7 +127,7 @@ components.html(
             });
         }
 
-        video.addEventListener('loadedmetadata', function() {
+        function drawGuideLines() {
             var canvas = document.getElementById('guideCanvas');
             var context = canvas.getContext('2d');
             canvas.width = video.videoWidth;
@@ -133,10 +138,14 @@ components.html(
             var rectHeight = rectWidth * (7 / 5);
             var left = (canvas.width - rectWidth) / 2;
             var top = (canvas.height - rectHeight) / 2;
+            context.clearRect(0, 0, canvas.width, canvas.height);
             context.strokeStyle = 'red';
             context.lineWidth = 5;
             context.strokeRect(left, top, rectWidth, rectHeight);
-        });
+        }
+
+        video.addEventListener('loadedmetadata', drawGuideLines);
+        window.addEventListener('resize', drawGuideLines);
     </script>
     """,
     height=600,
