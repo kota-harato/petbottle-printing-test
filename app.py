@@ -1,6 +1,6 @@
 import streamlit as st
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image
 import base64
 from io import BytesIO
 import cv2
@@ -88,9 +88,12 @@ st.markdown('<div class="subheader">カメラの撮影範囲のガイドライ�
 st.write("以下のガイド画像に従って、カメラの撮影範囲を調整してください。撮影範囲内に文字が収まるようにしてください。")
 
 # ガイド画像の表示
-guide_image_path = "guide_image.jpg"  # ガイド画像のパス
-guide_image = Image.open(guide_image_path)
-st.image(guide_image, caption='撮影範囲のガイドライン', use_column_width=True)
+guide_image_path = "guide_image.jpg"  # ガイド画像のパスを正確に指定
+try:
+    guide_image = Image.open(guide_image_path)
+    st.image(guide_image, caption='撮影範囲のガイドライン', use_column_width=True)
+except FileNotFoundError:
+    st.error("ガイド画像が見つかりませんでした。guide_image.jpgが正しい場所にあることを確認してください。")
 
 # マスターデータの入力
 master_data = st.text_input("マスターデータを入力してください", "")
