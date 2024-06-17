@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import numpy as np
 from PIL import Image
 import base64
@@ -77,27 +76,6 @@ st.markdown(
     .character-image {
         height: 50px;
     }
-    #videoContainer {
-        position: relative;
-        width: 100%;
-        height: auto;
-    }
-    #videoElement {
-        width: 100%;
-        height: auto;
-    }
-    #overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-    }
-    #overlay canvas {
-        width: 100%;
-        height: auto;
-    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -105,55 +83,13 @@ st.markdown(
 
 st.markdown('<div class="title">文字検出とOCR</div>', unsafe_allow_html=True)
 
-# JavaScriptとHTMLの埋め込み
-components.html(
-    """
-    <div id="videoContainer">
-        <video id="videoElement" autoplay></video>
-        <div id="overlay">
-            <canvas id="guideCanvas"></canvas>
-        </div>
-    </div>
-    <script>
-        var video = document.querySelector("#videoElement");
-
-        if (navigator.mediaDevices.getUserMedia) {
-            navigator.mediaDevices.getUserMedia({ video: true })
-            .then(function (stream) {
-                video.srcObject = stream;
-            })
-            .catch(function (err0r) {
-                console.log("Something went wrong!");
-            });
-        }
-
-        function drawGuideLines() {
-            var canvas = document.getElementById('guideCanvas');
-            var context = canvas.getContext('2d');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-
-            // 赤い枠線の描画
-            var rectWidth = canvas.width * 0.4;
-            var rectHeight = rectWidth * (7 / 5);
-            var left = (canvas.width - rectWidth) / 2;
-            var top = (canvas.height - rectHeight) / 2;
-            context.clearRect(0, 0, canvas.width, canvas.height);
-            context.strokeStyle = 'red';
-            context.lineWidth = 5;
-            context.strokeRect(left, top, rectWidth, rectHeight);
-        }
-
-        video.addEventListener('loadedmetadata', drawGuideLines);
-        window.addEventListener('resize', drawGuideLines);
-    </script>
-    """,
-    height=600,
-)
+# カメラ入力をキャプチャ
+camera_image = st.camera_input("カメラで写真を撮影してください")
 
 # マスターデータの入力
 master_data = st.text_input("マスターデータを入力してください", "")
 
+# 画像ファイルのアップロード
 uploaded_files = st.file_uploader("画像を選択してください...", type=["jpg", "png"], accept_multiple_files=True)
 
 def get_image_base64(image_array):
@@ -163,10 +99,20 @@ def get_image_base64(image_array):
     encoded = base64.b64encode(buffer.getvalue()).decode()
     return encoded
 
-if uploaded_files and master_data:
-    for uploaded_file in uploaded_files:
-        st.markdown(f'<div class="subheader">処理中: {uploaded_file.name}</div>', unsafe_allow_html=True)
-        image = Image.open(uploaded_file).convert("RGB")
+# 画像処理
+if camera_image or uploaded_files:
+    image_list = []
+    if camera_image:
+        image = Image.open(camera_image).convert("RGB")
+        image_list.append(image)
+    
+    if uploaded_files:
+        for uploaded_file in uploaded_files:
+            image = Image.open(uploaded_file).convert("RGB")
+            image_list.append(image)
+
+    for image in image_list:
+        st.markdown('<div class="subheader">処理中の画像:</div>', unsafe_allow_html=True)
         image_np = np.array(image)
         boxes, processed_image = detect_text(image_np)
         img_with_boxes = draw_boxes(processed_image, boxes)
