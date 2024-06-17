@@ -1,9 +1,9 @@
 import streamlit as st
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw
 import base64
 from io import BytesIO
-import cv2  # OpenCVを使用
+import cv2
 from text_detection import detect_text, draw_boxes, extract_text_from_boxes, recognition_model, data_transforms
 
 # ページ設定を「wide」に設定
@@ -82,6 +82,15 @@ st.markdown(
 )
 
 st.markdown('<div class="title">文字検出とOCR</div>', unsafe_allow_html=True)
+
+# カメラの撮影範囲のガイドラインを説明
+st.markdown('<div class="subheader">カメラの撮影範囲のガイドライン</div>', unsafe_allow_html=True)
+st.write("以下のガイド画像に従って、カメラの撮影範囲を調整してください。撮影範囲内に文字が収まるようにしてください。")
+
+# ガイド画像の表示
+guide_image_path = "guide_image.jpg"  # ガイド画像のパス
+guide_image = Image.open(guide_image_path)
+st.image(guide_image, caption='撮影範囲のガイドライン', use_column_width=True)
 
 # マスターデータの入力
 master_data = st.text_input("マスターデータを入力してください", "")
