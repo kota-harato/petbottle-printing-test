@@ -5,6 +5,7 @@ import base64
 from io import BytesIO
 import cv2
 from text_detection import detect_text, draw_boxes, extract_text_from_boxes, recognition_model, data_transforms
+from webcam_overlay import webcam_overlay
 
 # ページ設定を「wide」に設定
 st.set_page_config(layout="wide")
@@ -83,17 +84,9 @@ st.markdown(
 
 st.markdown('<div class="title">文字検出とOCR</div>', unsafe_allow_html=True)
 
-# カメラ入力をキャプチャ
-camera_image = st.camera_input("カメラで写真を撮影してください")
-
-# ガイドライン画像の表示
-st.markdown('<div class="subheader">ガイドラインに従って写真を撮影してください:</div>', unsafe_allow_html=True)
-guide_image_path = "guide_image.jpg"  # ガイド画像のパスを正確に指定
-try:
-    guide_image = Image.open(guide_image_path)
-    st.image(guide_image, caption='撮影範囲のガイドライン', use_column_width=True)
-except FileNotFoundError:
-    st.error("ガイド画像が見つかりませんでした。guide_image.jpgが正しい場所にあることを確認してください。")
+# カメラ入力とガイドラインの表示
+st.markdown('<div class="subheader">カメラで写真を撮影してください:</div>', unsafe_allow_html=True)
+webcam_overlay()
 
 # マスターデータの入力
 master_data = st.text_input("マスターデータを入力してください", "")
@@ -109,16 +102,11 @@ def get_image_base64(image_array):
     return encoded
 
 # 画像処理
-if camera_image or uploaded_files:
+if uploaded_files:
     image_list = []
-    if camera_image:
-        image = Image.open(camera_image).convert("RGB")
+    for uploaded_file in uploaded_files:
+        image = Image.open(uploaded_file).convert("RGB")
         image_list.append(image)
-    
-    if uploaded_files:
-        for uploaded_file in uploaded_files:
-            image = Image.open(uploaded_file).convert("RGB")
-            image_list.append(image)
 
     for image in image_list:
         st.markdown('<div class="subheader">処理中の画像:</div>', unsafe_allow_html=True)
