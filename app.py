@@ -76,6 +76,22 @@ st.markdown(
     .character-image {
         height: 50px;
     }
+    #videoElement {
+        width: 100%;
+        height: auto;
+    }
+    #overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+    }
+    #overlay canvas {
+        width: 100%;
+        height: auto;
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -83,17 +99,47 @@ st.markdown(
 
 st.markdown('<div class="title">文字検出とOCR</div>', unsafe_allow_html=True)
 
-# カメラの撮影範囲のガイドラインを説明
-st.markdown('<div class="subheader">カメラの撮影範囲のガイドライン</div>', unsafe_allow_html=True)
-st.write("以下のガイド画像に従って、カメラの撮影範囲を調整してください。撮影範囲内に文字が収まるようにしてください。")
+# JavaScriptとHTMLの埋め込み
+components.html(
+    """
+    <div style="position: relative;">
+        <video id="videoElement" autoplay></video>
+        <div id="overlay">
+            <canvas id="guideCanvas"></canvas>
+        </div>
+    </div>
+    <script>
+        var video = document.querySelector("#videoElement");
 
-# ガイド画像の表示
-guide_image_path = "guide_image.jpg"  # ガイド画像のパスを正確に指定
-try:
-    guide_image = Image.open(guide_image_path)
-    st.image(guide_image, caption='撮影範囲のガイドライン', use_column_width=True)
-except FileNotFoundError:
-    st.error("ガイド画像が見つかりませんでした。guide_image.jpgが正しい場所にあることを確認してください。")
+        if (navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: true })
+            .then(function (stream) {
+                video.srcObject = stream;
+            })
+            .catch(function (err0r) {
+                console.log("Something went wrong!");
+            });
+        }
+
+        video.addEventListener('loadedmetadata', function() {
+            var canvas = document.getElementById('guideCanvas');
+            var context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            // 赤い枠線の描画
+            var rectWidth = canvas.width * 0.4;
+            var rectHeight = rectWidth * (7 / 5);
+            var left = (canvas.width - rectWidth) / 2;
+            var top = (canvas.height - rectHeight) / 2;
+            context.strokeStyle = 'red';
+            context.lineWidth = 5;
+            context.strokeRect(left, top, rectWidth, rectHeight);
+        });
+    </script>
+    """,
+    height=600,
+)
 
 # マスターデータの入力
 master_data = st.text_input("マスターデータを入力してください", "")
