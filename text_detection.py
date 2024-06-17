@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageOps
 from utils.craft import CRAFT
 from utils.craft_utils import adjustResultCoordinates, normalizeMeanVariance
 from utils.imgproc import loadImage, resize_aspect_ratio, cvt2HeatmapImg
@@ -83,52 +83,57 @@ def detect_text(image, text_threshold=0.7, box_expansion=20):
     # ヒートマップを元の画像サイズにリサイズ
     binary_map_resized = Image.fromarray((binary_map * 255).astype(np.uint8)).resize((orig_width, orig_height), Image.LANCZOS)
 
-    # 輪郭の検出
-    contours, _ = binary_map_resized.convert("L").point(lambda p: p > 128 and 255).convert("1").getbbox()
+    # 輪郭の検出（Pillowで実装）
+    binary_map_resized = binary_map_resized.convert("L").point(lambda p: p > 128 and 255)
+    binary_map_np = np.array(binary_map_resized)
 
-    # ボックスの取得
-    boxes = []
-    if contours:
-        for contour in contours:
-            rect = binary_map_resized.getbbox()
-            # ボックスを広げる
-            x_min = max(rect[0] - box_expansion, 0)
-            y_min = max(rect[1] - box_expansion, 0)
-            x_max = min(rect[2] + box_expansion, orig_width)
-            y_max = min(rect[3] + box_expansion, orig_height)
-            box = [
-                [x_min, y_min],
-                [x_max, y_min],
-                [x_max, y_max],
-                [x_min, y_max]
-            ]
-            boxes.append(box)
+    # 輪郭の取得
+    contours = []
+    for i in range(binary_map_np.shape[0]):
+        for j in range(binary_map_np.shape[1]):
+            if binary_map_np[i, j] == 255:
+                contours.append((j, i))
 
-        # ボックスをx座標の昇順に並べ替え
-        boxes.sort(key=lambda box: box[0][0])
+    if not contours:
+        return [], Image.fromarray(image)
 
-        # 最初の検出ボックスのy座標を使用
-        if boxes:
-            y_min = min([box[0][1] for box in boxes])
-            y_max = max([box[2][1] for box in boxes])
+    # バウンディングボックスの取得
+    x_coords, y_coords = zip(*contours)
+    x_min, y_min = min(x_coords), min(y_coords)
+    x_max, y_max = max(x_coords), max(y_coords)
 
-        # ボックスのy座標を調整して上部と下部に余裕を持たせる
-        y_min = max(y_min - box_expansion, 0)
-        y_max = min(y_max + box_expansion, orig_height)
+    boxes = [
+        [x_min, y_min],
+        [x_max, y_min],
+        [x_max, y_max],
+        [x_min, y_max]
+    ]
 
-        # 新しい切り出し領域を作成
-        new_boxes = []
-        for i in range(len(boxes)):
-            if i == 0:
-                x_min = boxes[i][0][0]
-            else:
-                x_min = (boxes[i][0][0] + boxes[i-1][1][0]) // 2
-            if i == len(boxes) - 1:
-                x_max = boxes[i][1][0]
-            else:
-                x_max = (boxes[i][1][0] + boxes[i+1][0][0]) // 2
+    # ボックスをx座標の昇順に並べ替え
+    boxes = sorted([boxes], key=lambda box: box[0][0])
 
-            new_boxes.append([[int(x_min), int(y_min)], [int(x_max), int(y_min)], [int(x_max), int(y_max)], [int(x_min), int(y_max)]])
+    # 最初の検出ボックスのy座標を使用
+    if boxes:
+        y_min = min([box[0][1] for box in boxes])
+        y_max = max([box[2][1] for box in boxes])
+
+    # ボックスのy座標を調整して上部と下部に余裕を持たせる
+    y_min = max(y_min - box_expansion, 0)
+    y_max = min(y_max + box_expansion, orig_height)
+
+    # 新しい切り出し領域を作成
+    new_boxes = []
+    for i in range(len(boxes)):
+        if i == 0:
+            x_min = boxes[i][0][0]
+        else:
+            x_min = (boxes[i][0][0] + boxes[i-1][1][0]) // 2
+        if i == len(boxes) - 1:
+            x_max = boxes[i][1][0]
+        else:
+            x_max = (boxes[i][1][0] + boxes[i+1][0][0]) // 2
+        
+        new_boxes.append([[int(x_min), int(y_min)], [int(x_max), int(y_min)], [int(x_max), int(y_max)], [int(x_min), int(y_max)]])
 
     return new_boxes, Image.fromarray(image)
 
