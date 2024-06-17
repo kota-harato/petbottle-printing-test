@@ -12,11 +12,15 @@ st.set_page_config(layout="wide")
 # ユーザー認証
 def check_password():
     def password_entered():
-        # 文字列として比較することを明確にするために str() を使用
-        if str(st.session_state["password"]) == str(st.secrets["password"]):
-            st.session_state["password_correct"] = True
-            del st.session_state["password"]  # パスワードのセキュリティを確保
-        else:
+        try:
+            # 文字列として比較することを明確にするために str() を使用
+            if str(st.session_state["password"]) == str(st.secrets["password"]):
+                st.session_state["password_correct"] = True
+                del st.session_state["password"]  # パスワードのセキュリティを確保
+            else:
+                st.session_state["password_correct"] = False
+        except KeyError:
+            st.error("シークレットが設定されていません。Streamlit Cloudのシークレット設定を確認してください。")
             st.session_state["password_correct"] = False
 
     # パスワードが正しいかどうかのフラグをセッションステートで管理
