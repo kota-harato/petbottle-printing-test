@@ -3,7 +3,6 @@ import json
 import os
 from datetime import datetime, timedelta
 import string
-import random
 import numpy as np
 from PIL import Image
 import base64
@@ -83,6 +82,12 @@ st.markdown(
         height: 50px;
     }
     .stTextInput, .stTextArea {
+        background-color: #e6f2ff;  /* 入力欄の背景色を変更 */
+        border: 1px solid #a1c2e8;
+        border-radius: 5px;
+        padding: 10px;
+    }
+    .stDateInput {
         background-color: #e6f2ff;  /* 入力欄の背景色を変更 */
         border: 1px solid #a1c2e8;
         border-radius: 5px;
@@ -186,25 +191,25 @@ elif choice == "マスターデータ登録":
     
     master_data = load_master_data()
     product_name = st.text_input("品目名を入力してください")
-    manufacture_date = st.date_input("製造年月を選択してください", datetime.today(), format="YYYY-MM")
+    manufacture_date = st.text_input("製造年月を入力してください (YYYY-MM)", max_chars=7)
     alphabet_suffix = st.text_input("賞味期限のアルファベット2文字を入力してください", max_chars=2).upper()
 
-    if alphabet_suffix:
-        expiry_date = calculate_expiry_date(manufacture_date.strftime("%Y-%m")) + '+' + alphabet_suffix
+    if manufacture_date and alphabet_suffix:
+        expiry_date = calculate_expiry_date(manufacture_date) + '+' + alphabet_suffix
         st.write(f"賞味期限: {expiry_date}")
     else:
         expiry_date = None
 
     if st.button("登録"):
         if product_name and manufacture_date and alphabet_suffix:
-            key = f"{product_name}_{manufacture_date.strftime('%Y-%m')}"
+            key = f"{product_name}_{manufacture_date}"
             master_data[key] = {
                 "product_name": product_name,
-                "manufacture_date": manufacture_date.strftime("%Y-%m"),
+                "manufacture_date": manufacture_date,
                 "expiry_date": expiry_date
             }
             save_master_data(master_data)
-            st.success(f"品目名 '{product_name}'、製造年月 '{manufacture_date.strftime('%Y-%m')}' と賞味期限 '{expiry_date}' を登録しました。")
+            st.success(f"品目名 '{product_name}'、製造年月 '{manufacture_date}' と賞味期限 '{expiry_date}' を登録しました。")
         else:
             st.error("品目名、製造年月、賞味期限のアルファベット2文字を入力してください。")
 
@@ -215,3 +220,4 @@ elif choice == "マスターデータ登録":
             del master_data[key]
             save_master_data(master_data)
             st.success(f"マスターデータ '{key}' を削除しました。")
+            st.experimental_rerun()  # 削除後に再描画するために追加
