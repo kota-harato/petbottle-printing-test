@@ -93,6 +93,9 @@ st.markdown(
         border-radius: 5px;
         padding: 10px;
     }
+    .stButton {
+        margin-top: 20px;
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -198,46 +201,52 @@ if choice == "OCR":
 
 elif choice == "マスターデータ登録":
     st.markdown('<div class="title">マスターデータ登録</div>', unsafe_allow_html=True)
-    
-    master_data = load_master_data()
-    product_name = st.text_input("品目名を入力してください")
-    manufacture_date = st.text_input("製造年月を入力してください (YYYY-MM)", max_chars=7)
-    expiry_rule = st.selectbox("賞味期限のルールを選択してください", ["ルール1: 製造日から1年後", "ルール2: 製造日から6か月後", "ルール3: 製造日から3か月後"])
 
-    if manufacture_date:
-        expiry_date = calculate_expiry_date(manufacture_date, expiry_rule)
-        st.write(f"賞味期限: {expiry_date}")
-    else:
-        expiry_date = None
+    col1, col2 = st.columns([1, 2])
 
-    if st.button("登録"):
-        if product_name and manufacture_date:
-            key = f"{product_name}_{manufacture_date}"
-            master_data[key] = {
-                "product_name": product_name,
-                "manufacture_date": manufacture_date,
-                "expiry_date": expiry_date
-            }
-            save_master_data(master_data)
-            st.success(f"品目名 '{product_name}'、製造年月 '{manufacture_date}' と賞味期限 '{expiry_date}' を登録しました。")
+    with col1:
+        st.markdown('<div class="subheader">登録済みのマスターデータ</div>', unsafe_allow_html=True)
+
+        master_data = load_master_data()
+        if master_data:
+            df = pd.DataFrame(master_data).T.reset_index()
+            df.columns = ['キー', '品目名', '製造年月', '賞味期限']
+            st.dataframe(df)
+
+        for key in master_data.keys():
+            if st.button(f"削除 {key}"):
+                del master_data[key]
+                save_master_data(master_data)
+                st.success(f"マスターデータ '{key}' を削除しました。")
+                st.experimental_rerun()  # 削除後に再描画するために追加
+
+        if st.button("マスターデータを初期化"):
+            initialize_master_data()
+            st.success("マスターデータを初期化しました。")
+            st.experimental_rerun()
+
+    with col2:
+        st.markdown('<div class="subheader">新しいマスターデータの登録</div>', unsafe_allow_html=True)
+
+        product_name = st.text_input("品目名を入力してください")
+        manufacture_date = st.text_input("製造年月を入力してください (YYYY-MM)", max_chars=7)
+        expiry_rule = st.selectbox("賞味期限のルールを選択してください", ["ルール1: 製造日から1年後", "ルール2: 製造日から6か月後", "ルール3: 製造日から3か月後"])
+
+        if manufacture_date:
+            expiry_date = calculate_expiry_date(manufacture_date, expiry_rule)
+            st.write(f"賞味期限: {expiry_date}")
         else:
-            st.error("品目名、製造年月を入力してください。")
+            expiry_date = None
 
-    if st.button("マスターデータを初期化"):
-        initialize_master_data()
-        st.success("マスターデータを初期化しました。")
-        st.experimental_rerun()
-
-    st.markdown('<div class="subheader">登録済みのマスターデータ</div>', unsafe_allow_html=True)
-
-    if master_data:
-        df = pd.DataFrame(master_data).T.reset_index()
-        df.columns = ['キー', '品目名', '製造年月', '賞味期限']
-        st.dataframe(df)
-
-    for key in master_data.keys():
-        if st.button(f"削除 {key}"):
-            del master_data[key]
-            save_master_data(master_data)
-            st.success(f"マスターデータ '{key}' を削除しました。")
-            st.experimental_rerun()  # 削除後に再描画するために追加
+        if st.button("登録"):
+            if product_name and manufacture_date:
+                key = f"{product_name}_{manufacture_date}"
+                master_data[key] = {
+                    "product_name": product_name,
+                    "manufacture_date": manufacture_date,
+                    "expiry_date": expiry_date
+                }
+                save_master_data(master_data)
+                st.success(f"品目名 '{product_name}'、製造年月 '{manufacture_date}' と賞味期限 '{expiry_date}' を登録しました。")
+            else:
+                st.error("品目名、製造年月を入力してください。")
