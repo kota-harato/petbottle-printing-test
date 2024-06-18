@@ -215,9 +215,12 @@ elif choice == "マスターデータ登録":
 
     st.markdown('<div class="subheader">登録済みのマスターデータ</div>', unsafe_allow_html=True)
     for key, value in master_data.items():
-        st.write(f"**{key}**: 品目名: {value['product_name']}, 製造年月: {value['manufacture_date']}, 賞味期限: {value['expiry_date']}")
-        if st.button(f"削除 {key}"):
-            del master_data[key]
-            save_master_data(master_data)
-            st.success(f"マスターデータ '{key}' を削除しました。")
-            st.experimental_rerun()  # 削除後に再描画するために追加
+        if isinstance(value, dict):
+            st.write(f"**{key}**: 品目名: {value.get('product_name')}, 製造年月: {value.get('manufacture_date')}, 賞味期限: {value.get('expiry_date')}")
+            if st.button(f"削除 {key}"):
+                del master_data[key]
+                save_master_data(master_data)
+                st.success(f"マスターデータ '{key}' を削除しました。")
+                st.experimental_rerun()  # 削除後に再描画するために追加
+        else:
+            st.write(f"データ形式が不正です: {key} => {value}")
