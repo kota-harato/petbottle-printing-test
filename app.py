@@ -3,6 +3,7 @@ import json
 import os
 from datetime import datetime, timedelta
 import string
+import pandas as pd
 import numpy as np
 from PIL import Image
 import base64
@@ -113,6 +114,11 @@ def save_master_data(data):
     with open(MASTER_DATA_FILE, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
+# マスターデータの初期化
+def initialize_master_data():
+    if os.path.exists(MASTER_DATA_FILE):
+        os.remove(MASTER_DATA_FILE)
+
 # 賞味期限の計算
 def calculate_expiry_date(manufacture_date):
     manufacture_date_obj = datetime.strptime(manufacture_date, "%Y-%m")
@@ -213,14 +219,21 @@ elif choice == "マスターデータ登録":
         else:
             st.error("品目名、製造年月、賞味期限のアルファベット2文字を入力してください。")
 
+    if st.button("マスターデータを初期化"):
+        initialize_master_data()
+        st.success("マスターデータを初期化しました。")
+        st.experimental_rerun()
+
     st.markdown('<div class="subheader">登録済みのマスターデータ</div>', unsafe_allow_html=True)
-    for key, value in master_data.items():
-        if isinstance(value, dict):
-            st.write(f"**{key}**: 品目名: {value.get('product_name')}, 製造年月: {value.get('manufacture_date')}, 賞味期限: {value.get('expiry_date')}")
-            if st.button(f"削除 {key}"):
-                del master_data[key]
-                save_master_data(master_data)
-                st.success(f"マスターデータ '{key}' を削除しました。")
-                st.experimental_rerun()  # 削除後に再描画するために追加
-        else:
-            st.write(f"データ形式が不正です: {key} => {value}")
+
+    if master_data:
+        df = pd.DataFrame(master_data).T.reset_index()
+        df.columns = ['キー', '品目名', '製造年月', '賞味期限']
+        st.dataframe(df)
+
+    for key in master_data.keys():
+        if st.button(f"削除 {key}"):
+            del master_data[key]
+            save_master_data(master_data)
+            st.success(f"マスターデータ '{key}' を削除しました。")
+            st.experimental_rerun()  # 削除後に再描画するために追加
