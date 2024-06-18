@@ -223,12 +223,12 @@ elif choice == "マスターデータ登録":
             df.columns = ['キー', '品目名', '製造年月', '賞味期限']
             st.dataframe(df)
 
-        for key in master_data.keys():
-            if st.button(f"削除 {key}"):
-                del master_data[key]
-                save_master_data(master_data)
-                st.success(f"マスターデータ '{key}' を削除しました。")
-                st.experimental_rerun()  # 削除後に再描画するために追加
+        # for key in master_data.keys():
+        #     if st.button(f"削除 {key}"):
+        #         del master_data[key]
+        #         save_master_data(master_data)
+        #         st.success(f"マスターデータ '{key}' を削除しました。")
+        #         st.experimental_rerun()  # 削除後に再描画するために追加
 
         if st.button("マスターデータを初期化"):
             initialize_master_data()
@@ -239,7 +239,8 @@ elif choice == "マスターデータ登録":
         st.markdown('<div class="subheader">新しいマスターデータの登録</div>', unsafe_allow_html=True)
 
         product_name = st.text_input("品目名を入力してください")
-        manufacture_date = st.text_input("製造年月を入力してください (YYYY-MM)", max_chars=7)
+        # manufacture_date = st.text_input("製造年月を入力してください (YYYY-MM)", max_chars=7)
+        manufacture_date = "2024-11"
         expiry_rule = st.selectbox("賞味期限のルールを選択してください", ["ルール1: 製造日から1年後", "ルール2: 製造日から6か月後", "ルール3: 製造日から3か月後"], key='expiry_rule_selectbox', help='賞味期限の計算ルールを選択してください')
 
         if manufacture_date:
