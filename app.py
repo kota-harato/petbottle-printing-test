@@ -79,11 +79,17 @@ st.markdown(
     .character-image {
         height: 50px;
     }
+    .input-box {
+        border: 2px solid #ccc;
+        padding: 10px;
+        border-radius: 5px;
+        background-color: #fff;
+        margin-bottom: 20px;
+    }
     </style>
     """,
     unsafe_allow_html=True,
 )
-
 
 # グローバル変数
 MASTER_DATA_FILE = 'master_data.json'
@@ -174,11 +180,17 @@ elif choice == "マスターデータ登録":
     new_master_name = st.text_input("新しいマスターデータ名を入力してください", "")
     new_master_value = st.text_area("マスターデータの値を入力してください", "")
 
+    with st.container():
+        st.markdown('<div class="input-box">', unsafe_allow_html=True)
+        st.text_input("新しいマスターデータ名を入力してください", key="new_master_name")
+        st.text_area("マスターデータの値を入力してください", key="new_master_value")
+        st.markdown('</div>', unsafe_allow_html=True)
+
     if st.button("登録"):
-        if new_master_name and new_master_value:
-            master_data[new_master_name] = new_master_value
+        if st.session_state.new_master_name and st.session_state.new_master_value:
+            master_data[st.session_state.new_master_name] = st.session_state.new_master_value
             save_master_data(master_data)
-            st.success(f"マスターデータ '{new_master_name}' を登録しました。")
+            st.success(f"マスターデータ '{st.session_state.new_master_name}' を登録しました。")
         else:
             st.error("マスターデータ名と値の両方を入力してください。")
 
