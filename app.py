@@ -79,12 +79,11 @@ st.markdown(
     .character-image {
         height: 50px;
     }
-    .input-box {
-        border: 2px solid #ccc;
-        padding: 10px;
+    .stTextInput, .stTextArea {
+        background-color: #e6f2ff;  /* 入力欄の背景色を変更 */
+        border: 1px solid #a1c2e8;
         border-radius: 5px;
-        background-color: #fff;
-        margin-bottom: 20px;
+        padding: 10px;
     }
     </style>
     """,
@@ -179,11 +178,6 @@ elif choice == "マスターデータ登録":
     master_data = load_master_data()
     new_master_name = st.text_input("新しいマスターデータ名を入力してください", "")
     new_master_value = st.text_area("マスターデータの値を入力してください", "")
-
-    st.markdown('<div class="input-box">', unsafe_allow_html=True)
-    new_master_name = st.text_input("新しいマスターデータ名を入力してください", "")
-    new_master_value = st.text_area("マスターデータの値を入力してください", "")
-    st.markdown('</div>', unsafe_allow_html=True)
 
     if st.button("登録"):
         if new_master_name and new_master_value:
