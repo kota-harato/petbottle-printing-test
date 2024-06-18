@@ -1,6 +1,9 @@
 import streamlit as st
 import json
 import os
+from datetime import datetime, timedelta
+import string
+import random
 import numpy as np
 from PIL import Image
 import base64
@@ -105,6 +108,16 @@ def save_master_data(data):
     with open(MASTER_DATA_FILE, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
+# 賞味期限の計算
+def calculate_expiry_date(manufacture_date):
+    manufacture_date_obj = datetime.strptime(manufacture_date, "%Y-%m-%d")
+    expiry_date_obj = manufacture_date_obj + timedelta(days=6*30)  # 6か月後
+    return expiry_date_obj.strftime("%Y-%m-%d")
+
+# ランダムな大文字アルファベット2文字を生成
+def generate_random_suffix():
+    return ''.join(random.choices(string.ascii_uppercase, k=2))
+
 # メインメニュー
 menu = ["OCR", "マスターデータ登録"]
 choice = st.sidebar.selectbox("メニュー", menu)
@@ -176,16 +189,18 @@ elif choice == "マスターデータ登録":
     st.markdown('<div class="title">マスターデータ登録</div>', unsafe_allow_html=True)
     
     master_data = load_master_data()
-    new_master_name = st.text_input("新しいマスターデータ名を入力してください", "")
-    new_master_value = st.text_area("マスターデータの値を入力してください", "")
+    manufacture_date = st.date_input("製造日を選択してください", datetime.today())
+    random_suffix = generate_random_suffix()
+    expiry_date = calculate_expiry_date(manufacture_date.strftime("%Y-%m-%d")) + '+' + random_suffix
+    st.write(f"賞味期限: {expiry_date}")
 
     if st.button("登録"):
-        if new_master_name and new_master_value:
-            master_data[new_master_name] = new_master_value
+        if manufacture_date and expiry_date:
+            master_data[manufacture_date.strftime("%Y-%m-%d")] = expiry_date
             save_master_data(master_data)
-            st.success(f"マスターデータ '{new_master_name}' を登録しました。")
+            st.success(f"製造日 '{manufacture_date.strftime('%Y-%m-%d')}' と賞味期限 '{expiry_date}' を登録しました。")
         else:
-            st.error("マスターデータ名と値の両方を入力してください。")
+            st.error("製造日を入力してください。")
 
     st.markdown('<div class="subheader">登録済みのマスターデータ</div>', unsafe_allow_html=True)
     for name, value in master_data.items():
