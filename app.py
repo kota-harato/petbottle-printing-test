@@ -11,6 +11,80 @@ from text_detection import detect_text, draw_boxes, extract_text_from_boxes, rec
 # ページ設定を「wide」に設定
 st.set_page_config(layout="wide")
 
+# スタイルを定義
+st.markdown(
+    """
+    <style>
+    .stApp {
+        background-color: #f0f2f6;
+        font-family: 'Helvetica Neue', sans-serif;
+    }
+    .title {
+        color: #333;
+        text-align: center;
+        font-size: 36px;
+        font-weight: bold;
+    }
+    .subheader {
+        color: #333;
+        font-size: 24px;
+        font-weight: bold;
+        margin-top: 20px;
+    }
+    .highlight {
+        color: #ff6347;
+        font-weight: bold;
+        font-size: 24px;
+        text-align: center;
+    }
+    .ok {
+        background-color: #28a745;
+        color: white;
+        font-weight: bold;
+        font-size: 32px;
+        text-align: center;
+        padding: 20px;
+        border-radius: 10px;
+        border: 5px solid #28a745;
+        margin-top: 20px;
+    }
+    .ng {
+        background-color: #dc3545;
+        color: white;
+        font-weight: bold;
+        font-size: 32px;
+        text-align: center;
+        padding: 20px;
+        border-radius: 10px;
+        border: 5px solid #dc3545;
+        margin-top: 20px;
+    }
+    .uploaded-image {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .character-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-top: 20px;
+    }
+    .character-box {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 10px;
+    }
+    .character-image {
+        height: 50px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+
 # グローバル変数
 MASTER_DATA_FILE = 'master_data.json'
 
@@ -30,6 +104,13 @@ def save_master_data(data):
 menu = ["OCR", "マスターデータ登録"]
 choice = st.sidebar.selectbox("メニュー", menu)
 
+def get_image_base64(image_array):
+    img = Image.fromarray(image_array)
+    buffer = BytesIO()
+    img.save(buffer, format="PNG")
+    encoded = base64.b64encode(buffer.getvalue()).decode()
+    return encoded
+
 if choice == "OCR":
     st.markdown('<div class="title">文字検出とOCR</div>', unsafe_allow_html=True)
 
@@ -41,13 +122,6 @@ if choice == "OCR":
         master_choice = st.selectbox("マスターデータを選択してください", list(master_data.keys()))
 
         uploaded_files = st.file_uploader("画像を選択してください...", type=["jpg", "png"], accept_multiple_files=True)
-
-        def get_image_base64(image_array):
-            img = Image.fromarray(image_array)
-            buffer = BytesIO()
-            img.save(buffer, format="PNG")
-            encoded = base64.b64encode(buffer.getvalue()).decode()
-            return encoded
 
         if uploaded_files and master_choice:
             for uploaded_file in uploaded_files:
