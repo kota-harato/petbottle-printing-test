@@ -2,7 +2,6 @@ import streamlit as st
 import json
 import os
 from datetime import datetime, timedelta
-import string
 import pandas as pd
 import numpy as np
 from PIL import Image
@@ -123,7 +122,7 @@ def initialize_master_data():
 def calculate_expiry_date(manufacture_date):
     manufacture_date_obj = datetime.strptime(manufacture_date, "%Y-%m")
     expiry_date_obj = manufacture_date_obj + timedelta(days=6*30)  # 6か月後
-    return expiry_date_obj.strftime("%Y-%m")
+    return expiry_date_obj.strftime("%Y年%m月") + "+HP"
 
 # メインメニュー
 menu = ["OCR", "マスターデータ登録"]
@@ -198,16 +197,15 @@ elif choice == "マスターデータ登録":
     master_data = load_master_data()
     product_name = st.text_input("品目名を入力してください")
     manufacture_date = st.text_input("製造年月を入力してください (YYYY-MM)", max_chars=7)
-    alphabet_suffix = st.text_input("賞味期限のアルファベット2文字を入力してください", max_chars=2).upper()
 
-    if manufacture_date and alphabet_suffix:
-        expiry_date = calculate_expiry_date(manufacture_date) + '+' + alphabet_suffix
+    if manufacture_date:
+        expiry_date = calculate_expiry_date(manufacture_date)
         st.write(f"賞味期限: {expiry_date}")
     else:
         expiry_date = None
 
     if st.button("登録"):
-        if product_name and manufacture_date and alphabet_suffix:
+        if product_name and manufacture_date:
             key = f"{product_name}_{manufacture_date}"
             master_data[key] = {
                 "product_name": product_name,
@@ -217,7 +215,7 @@ elif choice == "マスターデータ登録":
             save_master_data(master_data)
             st.success(f"品目名 '{product_name}'、製造年月 '{manufacture_date}' と賞味期限 '{expiry_date}' を登録しました。")
         else:
-            st.error("品目名、製造年月、賞味期限のアルファベット2文字を入力してください。")
+            st.error("品目名、製造年月を入力してください。")
 
     if st.button("マスターデータを初期化"):
         initialize_master_data()
