@@ -87,14 +87,24 @@ st.markdown(
         border-radius: 5px;
         padding: 10px;
     }
-    .stDateInput {
-        background-color: #e6f2ff;  /* 入力欄の背景色を変更 */
+    .stSelectbox {
+        background-color: #e6f2ff;  /* プルダウンリストの背景色を変更 */
         border: 1px solid #a1c2e8;
         border-radius: 5px;
         padding: 10px;
     }
     .stButton {
         margin-top: 20px;
+    }
+    .expiry-highlight {
+        font-size: 24px;
+        font-weight: bold;
+        color: #007BFF;
+        background-color: #e6f2ff;
+        padding: 10px;
+        border-radius: 5px;
+        text-align: center;
+        margin-top: 10px;
     }
     </style>
     """,
@@ -230,11 +240,11 @@ elif choice == "マスターデータ登録":
 
         product_name = st.text_input("品目名を入力してください")
         manufacture_date = st.text_input("製造年月を入力してください (YYYY-MM)", max_chars=7)
-        expiry_rule = st.selectbox("賞味期限のルールを選択してください", ["ルール1: 製造日から1年後", "ルール2: 製造日から6か月後", "ルール3: 製造日から3か月後"])
+        expiry_rule = st.selectbox("賞味期限のルールを選択してください", ["ルール1: 製造日から1年後", "ルール2: 製造日から6か月後", "ルール3: 製造日から3か月後"], key='expiry_rule_selectbox', help='賞味期限の計算ルールを選択してください')
 
         if manufacture_date:
             expiry_date = calculate_expiry_date(manufacture_date, expiry_rule)
-            st.write(f"賞味期限: {expiry_date}")
+            st.markdown(f'<div class="expiry-highlight">賞味期限: {expiry_date}</div>', unsafe_allow_html=True)
         else:
             expiry_date = None
 
