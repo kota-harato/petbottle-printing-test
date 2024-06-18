@@ -110,13 +110,9 @@ def save_master_data(data):
 
 # 賞味期限の計算
 def calculate_expiry_date(manufacture_date):
-    manufacture_date_obj = datetime.strptime(manufacture_date, "%Y-%m-%d")
+    manufacture_date_obj = datetime.strptime(manufacture_date, "%Y-%m")
     expiry_date_obj = manufacture_date_obj + timedelta(days=6*30)  # 6か月後
-    return expiry_date_obj.strftime("%Y-%m-%d")
-
-# ランダムな大文字アルファベット2文字を生成
-def generate_random_suffix():
-    return ''.join(random.choices(string.ascii_uppercase, k=2))
+    return expiry_date_obj.strftime("%Y-%m")
 
 # メインメニュー
 menu = ["OCR", "マスターデータ登録"]
@@ -180,7 +176,7 @@ if choice == "OCR":
                     st.markdown(f'<div class="highlight">{combined_text}</div>', unsafe_allow_html=True)
 
                     # マスターデータと比較
-                    if combined_text == master_data[master_choice]:
+                    if combined_text == master_data[master_choice]["expiry_date"]:
                         st.markdown('<div class="ok">OK</div>', unsafe_allow_html=True)
                     else:
                         st.markdown('<div class="ng">NG</div>', unsafe_allow_html=True)
@@ -189,19 +185,33 @@ elif choice == "マスターデータ登録":
     st.markdown('<div class="title">マスターデータ登録</div>', unsafe_allow_html=True)
     
     master_data = load_master_data()
-    manufacture_date = st.date_input("製造日を選択してください", datetime.today())
-    random_suffix = generate_random_suffix()
-    expiry_date = calculate_expiry_date(manufacture_date.strftime("%Y-%m-%d")) + '+' + random_suffix
-    st.write(f"賞味期限: {expiry_date}")
+    product_name = st.text_input("品目名を入力してください")
+    manufacture_date = st.date_input("製造年月を選択してください", datetime.today(), format="YYYY-MM")
+    alphabet_suffix = st.text_input("賞味期限のアルファベット2文字を入力してください", max_chars=2).upper()
+
+    if alphabet_suffix:
+        expiry_date = calculate_expiry_date(manufacture_date.strftime("%Y-%m")) + '+' + alphabet_suffix
+        st.write(f"賞味期限: {expiry_date}")
+    else:
+        expiry_date = None
 
     if st.button("登録"):
-        if manufacture_date and expiry_date:
-            master_data[manufacture_date.strftime("%Y-%m-%d")] = expiry_date
+        if product_name and manufacture_date and alphabet_suffix:
+            key = f"{product_name}_{manufacture_date.strftime('%Y-%m')}"
+            master_data[key] = {
+                "product_name": product_name,
+                "manufacture_date": manufacture_date.strftime("%Y-%m"),
+                "expiry_date": expiry_date
+            }
             save_master_data(master_data)
-            st.success(f"製造日 '{manufacture_date.strftime('%Y-%m-%d')}' と賞味期限 '{expiry_date}' を登録しました。")
+            st.success(f"品目名 '{product_name}'、製造年月 '{manufacture_date.strftime('%Y-%m')}' と賞味期限 '{expiry_date}' を登録しました。")
         else:
-            st.error("製造日を入力してください。")
+            st.error("品目名、製造年月、賞味期限のアルファベット2文字を入力してください。")
 
     st.markdown('<div class="subheader">登録済みのマスターデータ</div>', unsafe_allow_html=True)
-    for name, value in master_data.items():
-        st.write(f"**{name}**: {value}")
+    for key, value in master_data.items():
+        st.write(f"**{key}**: 品目名: {value['product_name']}, 製造年月: {value['manufacture_date']}, 賞味期限: {value['expiry_date']}")
+        if st.button(f"削除 {key}"):
+            del master_data[key]
+            save_master_data(master_data)
+            st.success(f"マスターデータ '{key}' を削除しました。")
