@@ -119,9 +119,14 @@ def initialize_master_data():
         os.remove(MASTER_DATA_FILE)
 
 # 賞味期限の計算
-def calculate_expiry_date(manufacture_date):
+def calculate_expiry_date(manufacture_date, rule):
     manufacture_date_obj = datetime.strptime(manufacture_date, "%Y-%m")
-    expiry_date_obj = manufacture_date_obj + timedelta(days=6*30)  # 6か月後
+    if rule == "ルール1: 製造日から1年後":
+        expiry_date_obj = manufacture_date_obj + timedelta(days=365)
+    elif rule == "ルール2: 製造日から6か月後":
+        expiry_date_obj = manufacture_date_obj + timedelta(days=6*30)
+    elif rule == "ルール3: 製造日から3か月後":
+        expiry_date_obj = manufacture_date_obj + timedelta(days=3*30)
     return expiry_date_obj.strftime("%Y年%m月") + "+HP"
 
 # メインメニュー
@@ -197,9 +202,10 @@ elif choice == "マスターデータ登録":
     master_data = load_master_data()
     product_name = st.text_input("品目名を入力してください")
     manufacture_date = st.text_input("製造年月を入力してください (YYYY-MM)", max_chars=7)
+    expiry_rule = st.selectbox("賞味期限のルールを選択してください", ["ルール1: 製造日から1年後", "ルール2: 製造日から6か月後", "ルール3: 製造日から3か月後"])
 
     if manufacture_date:
-        expiry_date = calculate_expiry_date(manufacture_date)
+        expiry_date = calculate_expiry_date(manufacture_date, expiry_rule)
         st.write(f"賞味期限: {expiry_date}")
     else:
         expiry_date = None
